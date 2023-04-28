@@ -1,0 +1,9 @@
+Python : py
+C : c
+C++ : cpp
+HTML : html
+Java : java
+PDFs : pdf
+Text Document : txt
+CSS : css
+Executables : exe
