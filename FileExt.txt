@@ -6,4 +6,5 @@ Java : java
 PDFs : pdf
 Text Document : txt
 CSS : css
+JavaScrip : js
 Executables : exe
