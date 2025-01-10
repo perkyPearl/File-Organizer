@@ -1,70 +1,81 @@
 import os
 import shutil
+import time
+from datetime import datetime
 
-FileCount = 0
-FolderCount = 0
-dic = {}
-Folders = []
-left=[]
-logs = []
-#Reads the File.txt and updates the dic Dictionary
-try:
-    file = open("FileExt.txt")
-    for i in file.readlines():
-        i = i.strip("\n").split(" : ")
-        Folders.append(i[0])
-        dic.update({i[1]: i[0]})    
-except:
-    pass
+path = os.path.join(os.path.expanduser("~"), "Downloads")
+fileExtPath = os.path.join(path, "FileExt.txt")
+logPath = os.path.join(path, "organizer_log.txt")
+
+defaultExt = {
+    "PDFs": ["pdf"],
+    "Text Document": ["txt"],
+    "Executables": ["exe"],
+    "Images": ["png", "jpg", "jpeg", "webp"],
+    "Videos": ["mp4"],
+    "Audios": ["mp3", "m4a"]
+}
+
+extensionsDict = {}
+
+def logWrite(event):
+    with open(logPath, "a", encoding="utf-8") as logF:
+        logF.write(f"{datetime.now()} - {event}\n")
+
+if os.path.exists(fileExtPath):
+    logWrite("Importing File Extensions from the FileExt.txt file.")
+    with open(fileExtPath, "r", encoding="utf-8") as file:
+        for line in file.readlines():
+            parts = line.strip().split(" : ")
+            if len(parts) == 2:
+                folderName = parts[0].strip()
+                extensions = parts[1].strip().split(",")
+                extensionsDict[folderName] = [ext.strip() for ext in extensions]
+    logWrite("File extensions imported successfully.")
+else:
+    with open(fileExtPath, "w", encoding="utf-8") as file:
+        logWrite("No FileExt.txt file found. Creating with default configurations.")
+        for folder, extensions in defaultExt.items():
+            file.write(f"{folder} : {','.join(extensions)}\n")
+    extensionsDict = defaultExt
+    logWrite("Default FileExt.txt file created.")
+
+def organize():
+    files = os.listdir(path)
+    
+    for file in files:
+        if file != "FileExt.txt" and file != "organizer_log.txt":
+            filePath = os.path.join(path, file)
+            
+            if os.path.isdir(filePath):
+                continue
+            
+            fileExt = file.split('.')[-1]
+            
+            moved = False
+            for folder_name, extensions in extensionsDict.items():
+                if fileExt in extensions:
+                    folder_path = os.path.join(path, folder_name)
+                    
+                    if not os.path.exists(folder_path):
+                        os.makedirs(folder_path)
+                    
+                    shutil.move(filePath, os.path.join(folder_path, file))
+                    logWrite(f"Moved {file} to {folder_name}/")
+                    moved = True
+                    break
+            
+            if not moved:
+                misc_folder = os.path.join(path, "Miscellaneous")
+                
+                if not os.path.exists(misc_folder):
+                    os.makedirs(misc_folder)
+                
+                shutil.move(filePath, os.path.join(misc_folder, file))
+                logWrite(f"Moved {file} to Miscellaneous/")
+
+print("Starting Organizer...")
 
 while True:
-    path = os.getcwd()
-    files = [i for i in os.listdir() if i not in Folders]
-
-    files.remove("Organizer.py")
-    files.remove("FileExt.txt")
-
-    inp = input('\nType "help" to list out all commands\n>> ').lower()
-
-    if inp == 'start':
-        for i in files:
-            file = i.split('.')                                          #Splits the File Name and Extension
-            if len(file) >= 2:
-                fileExt = file[1]
-                if fileExt in dic.keys():                               #Checks the File Extension is supported 
-                    if not os.path.exists(path+"\\"+dic[fileExt]):      #Checks the Folder exists
-                        os.mkdir(dic[fileExt])                          #Creates the Folder
-                        FolderCount+=1
-                    shutil.move(path+"\\"+i,path+"\\"+dic[fileExt])     #Moves the File into the Folder
-                    FileCount+=1
-                    logs.append(f"{i} -> {dic[fileExt]}")
-                else:
-                    left.append(i)                                      
-
-        if len(left) != 0:
-            print("\nFiles Ignored: ")
-            for i in left:
-                print(i)
-        print(f"\nFiles Moved: {FileCount}\nFolder Created: {FolderCount}")
-    
-    elif inp == 'status':
-        print("To be Sorted:")
-        for i in files:
-            print(i)
-
-    elif inp == "logs":
-        for i in logs:
-            print(i)
-    
-    elif inp == "help":
-        print('''
-start   : To Sort/Move the Files According to the File Extensions mentioned in the FileExt.txt.
-status  : To Printout the Files to that are going to be sorted.
-logs    : To Printout the Which File moved where. For that Particular Session/Instance.
-exit    : To Exit the Program.
-        ''')
-    elif inp == 'exit':
-        print("Exited")
-        break
-    else:
-        print("Invalid Command")
+    organize()
+    time.sleep(10)

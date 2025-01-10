@@ -1,10 +1,8 @@
-Python : py
-C : c
-C++ : cpp
-HTML : html
-Java : java
 PDFs : pdf
 Text Document : txt
 CSS : css
 JavaScrip : js
 Executables : exe
+Images : png, jpg, jpeg, webp
+Videos : mp4
+Audios : MP3, m4a
