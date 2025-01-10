@@ -40,6 +40,14 @@ else:
     extensionsDict = defaultExt
     logWrite("Default FileExt.txt file created.")
 
+def is_downloading(file):
+    return file.endswith(".crdownload") or file.endswith(".part")
+
+def is_file_complete(file_path):
+    size = os.path.getsize(file_path)
+    time.sleep(2)
+    return size == os.path.getsize(file_path)
+
 def organize():
     files = os.listdir(path)
     
@@ -50,8 +58,15 @@ def organize():
             if os.path.isdir(filePath):
                 continue
             
-            fileExt = file.split('.')[-1]
+            if is_downloading(file):
+                logWrite(f"Skipping {file} as it is still downloading.")
+                continue
             
+            if not is_file_complete(filePath):
+                logWrite(f"Skipping {file} as it is not fully downloaded.")
+                continue
+            
+            fileExt = file.split('.')[-1]
             moved = False
             for folder_name, extensions in extensionsDict.items():
                 if fileExt in extensions:
